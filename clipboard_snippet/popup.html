@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clipboard History</title>
+  <link rel="stylesheet" href="popup.css">
+  <link rel="stylesheet" href="lib/prism/prism-tomorrow.min.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>📋 Clipboard History</h1>
+      <div class="header-actions">
+        <button id="clearBtn" class="btn-icon" title="Clear all">🗑️</button>
+        <button id="settingsBtn" class="btn-icon" title="Settings">⚙️</button>
+      </div>
+    </header>
+    
+    <div class="search-container">
+      <input type="text" id="searchInput" placeholder="🔍 Search snippets..." autocomplete="off">
+      <div class="filter-tags" id="filterTags"></div>
+    </div>
+    
+    <div class="snippets-container" id="snippetsContainer">
+      <div class="empty-state">
+        <p>No clipboard history yet</p>
+        <p class="hint">Copy something to get started!</p>
+      </div>
+    </div>
+  </div>
+  
+  <script src="lib/prism/prism-core.min.js"></script>
+  <script src="lib/prism/prism-autoloader.min.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
+

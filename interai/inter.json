@@ -1,0 +1,185 @@
+{
+  "name": "Priyank Goswami",
+  "summary": {
+    "experience_years": "5.5+",
+    "education": [
+      "MSc IT (Computer Science)",
+      "B.C.A"
+    ],
+    "abstract": {
+      "frameworks": "Experienced with Django and Flask for backend development of scalable systems.",
+      "python_specialization": "Expanding knowledge in AI, Machine Learning, and Data Science with tools such as TensorFlow, Scikit-learn, Pandas.",
+      "cloud_platforms": "Experienced with GCP (Dialogflow, TensorFlow, ML APIs, Cloud SQL) and AWS (API Gateway, Lambda, Athena, EC2, ECS, Bedrock).",
+      "problem_solving": "Strong interest in solving complex design problems and continuously learning innovative technologies."
+    }
+  },
+  "technical_skills": {
+    "programming_languages": ["Python", "Go", "HTML"],
+    "cloud_skills": ["AWS S3", "Athena", "DynamoDB", "EC2", "Cloudwatch", "API Gateway", "ECR", "ECS"],
+    "languages_frameworks": ["Python-FastAPI", "Python-Flask"],
+    "databases": ["SQLite", "MySQL", "MongoDB", "DynamoDB"],
+    "operating_systems": ["Mac", "Windows"],
+    "web_technologies": ["HTML", "CSS", "Bootstrap"],
+    "ides": ["Visual Studio Code", "Sublime", "Postman"],
+    "source_control": ["GitLab", "GitHub"],
+    "project_management_tools": ["Trello"],
+    "skills": [
+      "Scripting",
+      "Web scraping",
+      "Chatbot development",
+      "Selenium",
+      "Dialogflow",
+      "GCP",
+      "AWS Services",
+      "Machine Learning",
+      "Pytorch",
+      "Data analysis",
+      "AI algorithms"
+    ],
+    "communication_tools": ["Skype", "Slack", "Google Meet", "Microsoft Teams", "Zoom"],
+    "certifications": [
+      "Building Conversational Experiences with Dialogflow - Coursera",
+      "Python3 Programming - Udemy"
+    ]
+  },
+  "projects": [
+    {
+      "name": "Experian",
+      "technologies": ["Python", "AWS ECS", "ElasticSearch", "Cloudwatch", "S3", "EC2"],
+      "description": "Worked on multinational data analytics and consumer credit reporting systems.",
+      "roles_responsibilities": [
+        "Created Python scripts for frequent ElasticSearch operations and automations.",
+        "Executed terraform plans and applied AWS changes.",
+        "Developed new functionalities and AWS setups across global regions (UK, EMEA, ESS, Brazil)."
+      ],
+      "link": "confidential"
+    },
+    {
+      "name": "HDFC Life Insurance",
+      "technologies": ["Python", "AWS Lambda", "Athena", "DynamoDB", "ElasticSearch"],
+      "description": "Backend for cross-platform application used by employees for lead generation and insurance planning.",
+      "roles_responsibilities": [
+        "Built new Lambda functionalities.",
+        "Resolved production issues and bugs.",
+        "Worked as part of core development team."
+      ],
+      "link": "confidential"
+    },
+    {
+      "name": "Charts - Angel One Broking",
+      "technologies": ["Python", "Go", "AWS Lambda", "AWS Eventbridge", "AWS Cloudwatch"],
+      "description": "Backend engineering for stock market live data (NSE, BSE, NCDEX, etc).",
+      "roles_responsibilities": [
+        "Worked on CRs using Python and Go.",
+        "Created data accuracy check framework for internal use."
+      ],
+      "link": "confidential"
+    },
+    {
+      "name": "Work Point",
+      "technologies": ["Python", "FastAPI", "HTML", "CSS", "Bootstrap", "MySQL", "DRF"],
+      "description": "Freelancing marketplace for clients and users with job posting, proposals, chat, notifications, and authentication.",
+      "roles_responsibilities": [
+        "Worked on frontend.",
+        "Designed and integrated APIs.",
+        "Implemented major functionalities."
+      ],
+      "link": "https://drive.google.com/file/d/1q6fJU2HwYMSTrumwD8VNQ_fEGZJfos-E/view?usp=sharing"
+    },
+    {
+      "name": "TO-DO List",
+      "technologies": ["Python", "Flask", "HTML", "CSS", "Bootstrap", "MongoDB"],
+      "description": "Flask app for task management with image upload, email notifications, and password reset.",
+      "roles_responsibilities": ["Managed backend development."],
+      "link": "https://drive.google.com/file/d/1AJz_QjjVD0BjsV2qvVn0lL-j9BY8FTz2/view?usp=sharing"
+    },
+    {
+      "name": "Blog Web Application",
+      "technologies": ["Python", "Django", "HTML", "CSS", "Bootstrap", "SQLite", "GraphQL", "Flask"],
+      "description": "Django blogging application with registration, blog CRUD, comments, likes, and password reset.",
+      "roles_responsibilities": [
+        "Created backend.",
+        "Built GraphQL APIs.",
+        "Integrated APIs using Flask."
+      ],
+      "link": "https://drive.google.com/file/d/1H-bxwA9fXeIkgPc7_f5dJDMgfcL0OSjz/view"
+    },
+    {
+      "name": "Pose Estimation Suggestor",
+      "technologies": ["Python", "OpenCV", "MediaPipe"],
+      "description": "Exercise posture correction using pose estimation.",
+      "roles_responsibilities": ["Created pose estimation script."],
+      "link": "https://drive.google.com/file/d/1S4r_TLDqPa-OKjI8zfdMvW9WVOydXs9i/view?usp=sharing"
+    },
+    {
+      "name": "Property Scraper",
+      "technologies": ["Python", "Selenium", "Beautiful Soup", "FastAPI"],
+      "description": "Automated multi-site property scraping with multi-threading, BeautifulSoup parsing, Slack notifications, and API endpoints.",
+      "roles_responsibilities": ["Performed scraping code using Selenium."],
+      "link": "https://drive.google.com/file/d/1PZJ20wVtxM6Xm6TaQmM26JKp7sWcsmz5/view?usp=sharing"
+    },
+    {
+      "name": "COVID Screening Test / Covid Chatbot",
+      "technologies": ["Python", "OpenCV", "Tensorflow", "Numpy", "Socket", "Flask"],
+      "description": "Covid screening test, health chatbot using sockets, and live Covid-19 status tracking."
+    },
+    {
+      "name": "COVID-19 Defender (Mask & Body Temperature Detection)",
+      "technologies": ["Python", "PyTorch", "OpenCV", "Pyttsx3", "Tensorflow", "Numpy"],
+      "description": "Detects mask usage and body temperature, sends alerts and reports with images.",
+      "link": "https://drive.google.com/file/d/1RlRsaagp0VhCGWzI2dT-rnWdJ1nYQNqq/view?usp=sharing"
+    },
+    {
+      "name": "Emojifier - Human Emotion Detection",
+      "technologies": ["Python", "Tensorflow", "dlib", "OpenCV"],
+      "description": "Emotion detection overlaying emojis with accuracy scores."
+    },
+    {
+      "name": "Face Recognition - ML Face Recognizer",
+      "technologies": ["Python", "OpenCV", "dlib", "numpy", "requests"],
+      "description": "Deep metric learning-based accurate face recognition system.",
+      "links": {
+        "realtime_demo": "https://drive.google.com/file/d/1q0FxnrypFi7IPopzgm7Tiu8P5YKX0vo-/view?usp=sharing",
+        "image_demo": "https://drive.google.com/file/d/1jbUWBMsXUFzCJVXtwq136_o8Kw17It1i/view?usp=sharing"
+      }
+    },
+    {
+      "name": "Conceptualize AI",
+      "technologies": ["Python", "Django", "SQLite", "HTML", "Numpy", "Tensorflow", "Paypal"],
+      "description": "GAN-based system generating new product variations from uploaded datasets."
+    },
+    {
+      "name": "Idoor - Smart Door Lock/Unlock System",
+      "technologies": ["Python", "Django", "OpenCV", "Android", "Django Rest Framework", "Dlib"],
+      "description": "Smart door system with remote access and face recognition APIs."
+    },
+    {
+      "name": "Helmet Detection",
+      "technologies": ["Python", "OpenCV", "Pyttsx3", "YOLO", "numpy"],
+      "description": "Helmet detection from live stream or images with 99% accuracy.",
+      "link": "https://drive.google.com/file/d/1ZJPlSlD1MGDDZmYlOvxfajIXyavsul5e/view?usp=sharing"
+    },
+    {
+      "name": "Appstore - Yudiz Appzone",
+      "technologies": ["Python", "Django", "SQLite", "androguard", "HTML", "CSS"],
+      "description": "Platform for developers to share .apk/.ipa files with clients, including version and description details."
+    },
+    {
+      "name": "Driver Fatigue / Drowsiness Detection",
+      "technologies": ["Python", "OpenCV", "Haarcascades"],
+      "description": "Driver drowsiness detection using yawning, eye closure, and attention patterns."
+    },
+    {
+      "name": "Dialogflow Appointment Scheduler Chatbot",
+      "technologies": ["Python", "NodeJS", "Dialogflow", "Botcopy"],
+      "description": "Marketing chatbot using NLP for customer interaction.",
+      "link": "https://drive.google.com/drive/folders/1V_f-2Qar4-myO2AcJ5thBHrJ5BEdHyaU?usp=sharing"
+    },
+    {
+      "name": "Rebet",
+      "technologies": ["Python", "Selenium", "Beautiful Soup", "Django"],
+      "description": "Betting platform backend built over AWS Lambda, API Gateway, DynamoDB, and CloudWatch triggers.",
+      "link": "confidential"
+    }
+  ]
+}

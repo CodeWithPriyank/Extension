@@ -1,0 +1,23 @@
+{
+    "manifest_version": 3,
+    "name": "Doc2Form Autofill",
+    "version": "1.0",
+    "description": "Extract text from uploaded documents and auto-fill online forms.",
+    "permissions": ["activeTab", "scripting", "storage"],
+    "host_permissions": ["http://localhost:5050/*"],
+    "action": {
+      "default_popup": "popup.html",
+      "default_icon": {
+        "16": "icons/icon1.png",
+        "48": "icons/icon2.png",
+        "128": "icons/icon1.png"
+      }
+    },
+    "content_scripts": [
+      {
+        "matches": ["<all_urls>"],
+        "js": ["contentScript.js"]
+      }
+    ]
+  }
+  
