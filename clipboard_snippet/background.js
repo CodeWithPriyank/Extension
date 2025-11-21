@@ -48,8 +48,14 @@ async function saveHistory() {
 // Detect code type from content
 function detectCodeType(text) {
   const trimmed = text.trim();
+  if (!trimmed) return 'text';
   
-  // JSON detection
+  const lines = trimmed.split('\n');
+  const firstLine = lines[0].trim();
+  const firstFewLines = lines.slice(0, 5).join('\n');
+  const lowerText = trimmed.toLowerCase();
+  
+  // JSON detection - must be valid JSON
   if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || 
       (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
     try {
@@ -58,46 +64,175 @@ function detectCodeType(text) {
     } catch (e) {}
   }
   
-  // Command detection (npm, git, curl, etc.)
-  if (/^(npm|yarn|pnpm|git|curl|wget|docker|kubectl|aws|gcloud)\s/.test(trimmed)) {
+  // Command detection (npm, git, curl, etc.) - check first line
+  if (/^(npm|yarn|pnpm|git|curl|wget|docker|kubectl|aws|gcloud|brew|apt|yum|pip|conda|sudo|chmod|chown|ls|cd|mkdir|rm|cp|mv)\s/.test(firstLine)) {
     return 'command';
   }
   
-  // JavaScript function detection
-  if (/^(function|const|let|var|export|import|async\s+function)\s+/.test(trimmed) || 
-      /=>\s*\{/.test(trimmed) || 
-      /\.(js|jsx|ts|tsx)$/.test(trimmed)) {
-    return 'javascript';
-  }
-  
-  // HTML detection
-  if (/^<[a-z][\s\S]*>/.test(trimmed) || /\.html?$/.test(trimmed)) {
-    return 'html';
-  }
-  
-  // CSS detection
-  if (/^[\s\S]*\{[\s\S]*:[\s\S]*\}/.test(trimmed) && !trimmed.includes('function')) {
-    return 'css';
-  }
-  
-  // Python detection
-  if (/^(def|class|import|from|if __name__)/.test(trimmed) || /\.py$/.test(trimmed)) {
-    return 'python';
-  }
-  
-  // SQL detection
-  if (/^(SELECT|INSERT|UPDATE|DELETE|CREATE|ALTER|DROP)\s/i.test(trimmed)) {
-    return 'sql';
-  }
-  
-  // Shell script detection
-  if (/^#!\/bin\/(bash|sh|zsh)/.test(trimmed) || /\.(sh|bash|zsh)$/.test(trimmed)) {
+  // Shell script detection - shebang or file extension
+  if (/^#!\/bin\/(bash|sh|zsh|fish|dash)/.test(firstLine) || 
+      /^#!\/usr\/bin\/(env\s+)?(bash|sh|zsh|fish)/.test(firstLine) ||
+      /\.(sh|bash|zsh|fish)$/.test(trimmed)) {
     return 'shell';
   }
   
+  // SQL detection - SQL keywords at start
+  if (/^(SELECT|INSERT|UPDATE|DELETE|CREATE|ALTER|DROP|WITH|EXPLAIN|MERGE|TRUNCATE)\s/i.test(firstLine)) {
+    return 'sql';
+  }
+  
+  // PHP detection - PHP opening tag
+  if (/^<\?php/.test(firstLine) || /\.php$/.test(trimmed)) {
+    return 'php';
+  }
+  
+  // HTML detection - HTML tags
+  if (/^<(!DOCTYPE|html|head|body|div|span|p|a|img|script|style|h[1-6]|ul|ol|li|table|form|input|button)/i.test(firstLine) ||
+      /^<[a-z][a-z0-9]*[\s>]/.test(firstLine) && /<\/[a-z]/.test(trimmed)) {
+    return 'html';
+  }
+  
+  // XML detection
+  if (/^<\?xml/.test(firstLine) || 
+      (/^<[A-Z][a-zA-Z0-9]*[\s>]/.test(firstLine) && /<\/[A-Z]/.test(trimmed))) {
+    return 'xml';
+  }
+  
+  // TypeScript detection - TS-specific syntax
+  if (/\.(ts|tsx)$/.test(trimmed)) {
+    return 'typescript';
+  }
+  if ((/interface\s+\w+|type\s+\w+\s*=\s*(string|number|boolean|any|void|object|Array|Promise|Record|Partial|Pick|Omit)/.test(trimmed) ||
+       /:\s*(string|number|boolean|any|void|object|Array|Promise|Record|Partial|Pick|Omit)\s*[;=,)]/.test(trimmed) ||
+       /<[A-Z][a-zA-Z0-9]*>/.test(trimmed)) &&
+      !/\.(js|jsx)$/.test(trimmed)) {
+    return 'typescript';
+  }
+  
+  // JavaScript/JSX detection
+  if (/\.(js|jsx|mjs|cjs)$/.test(trimmed)) {
+    return 'javascript';
+  }
+  if (/^(function|const|let|var|export|import|async\s+function|class|const\s+\w+\s*=\s*\(|const\s+\w+\s*=\s*async\s*\(|export\s+(default\s+)?(function|const|class|let|var))/i.test(firstLine) || 
+      /=>\s*\{/.test(trimmed) ||
+      /React\.(createElement|Component|Fragment)/.test(trimmed) ||
+      /(useState|useEffect|useContext|useReducer|useMemo|useCallback)\(/.test(trimmed) ||
+      /document\.(getElementById|querySelector|addEventListener)/.test(trimmed) ||
+      /window\.(addEventListener|location|history)/.test(trimmed)) {
+    return 'javascript';
+  }
+  
+  // Python detection
+  if (/\.py$/.test(trimmed) || /#!\/usr\/bin\/(env\s+)?python/.test(firstLine)) {
+    return 'python';
+  }
+  if (/^(def|class|import|from|if __name__|@|async def|lambda|print\(|#\s*[a-z])/i.test(firstLine) ||
+      /^\s*(def|class|import|from|if|elif|else|for|while|try|except|with|async def)\s+/.test(firstLine)) {
+    return 'python';
+  }
+  
+  // Java detection
+  if (/\.java$/.test(trimmed)) {
+    return 'java';
+  }
+  if (/^(public|private|protected|class|interface|package|import)\s+/.test(firstLine) ||
+      /@(Override|Deprecated|SuppressWarnings|Entity|Service|Component|Autowired)/.test(trimmed)) {
+    return 'java';
+  }
+  
+  // C/C++ detection
+  if (/\.(c|cpp|cc|cxx|h|hpp)$/.test(trimmed)) {
+    return 'cpp';
+  }
+  if (/^(#include|#define|#ifdef|#ifndef|#pragma|using namespace|std::)/.test(firstLine) ||
+      /int\s+main\s*\(/.test(trimmed)) {
+    return 'cpp';
+  }
+  
+  // Go detection
+  if (/\.go$/.test(trimmed)) {
+    return 'go';
+  }
+  if (/^(package|import|func|var|const|type)\s+/.test(firstLine) ||
+      (/:=/.test(trimmed) && /func\s+\w+\s*\(/.test(trimmed))) {
+    return 'go';
+  }
+  
+  // Rust detection
+  if (/\.rs$/.test(trimmed)) {
+    return 'rust';
+  }
+  if (/^(fn|let|mut|pub|use|mod|struct|enum|impl|trait|match)\s+/.test(firstLine) ||
+      (/->\s*[A-Z]/.test(trimmed) && /fn\s+\w+/.test(trimmed))) {
+    return 'rust';
+  }
+  
+  // Ruby detection
+  if (/\.rb$/.test(trimmed) || /#!\/usr\/bin\/(env\s+)?ruby/.test(firstLine)) {
+    return 'ruby';
+  }
+  if (/^(def|class|module|require|include)\s+/.test(firstLine) ||
+      (/end\s*$/.test(trimmed) && /def\s+\w+/.test(trimmed))) {
+    return 'ruby';
+  }
+  
+  // Swift detection
+  if (/\.swift$/.test(trimmed)) {
+    return 'swift';
+  }
+  if (/^(import|func|class|struct|enum|protocol|let|var|extension)\s+/.test(firstLine) ||
+      /@(IBAction|IBOutlet|objc|available|discardableResult)/.test(trimmed)) {
+    return 'swift';
+  }
+  
+  // Kotlin detection
+  if (/\.kt$/.test(trimmed)) {
+    return 'kotlin';
+  }
+  if (/^(fun|class|data class|object|package|import|val|var|interface)\s+/.test(firstLine)) {
+    return 'kotlin';
+  }
+  
+  // CSS/SCSS/SASS detection - must have CSS-like structure
+  if (/\.(css|scss|sass|less)$/.test(trimmed)) {
+    return 'css';
+  }
+  // Check for CSS selectors and properties
+  if ((/^[\s]*([.#]?[a-z][a-z0-9_-]*|@[a-z]+)[\s]*\{/.test(firstLine) ||
+       /^[\s]*[a-z-]+[\s]*:[\s]*[^;]+;/.test(firstLine)) &&
+      !trimmed.includes('function') && 
+      !trimmed.includes('=>') &&
+      !trimmed.includes('var ') &&
+      !trimmed.includes('const ') &&
+      !trimmed.includes('let ')) {
+    if (/@(import|mixin|include|extend|media|keyframes|function|if|for|while)/.test(trimmed)) {
+      return 'css'; // SCSS/SASS
+    }
+    // More strict CSS check - should have selector and property
+    if (/\{[^}]*[a-z-]+[\s]*:[\s]*[^;]+;/.test(trimmed)) {
+      return 'css';
+    }
+  }
+  
   // Markdown detection
-  if (/^#{1,6}\s/.test(trimmed) || /\[.*\]\(.*\)/.test(trimmed)) {
+  if (/\.md$/.test(trimmed) || /\.markdown$/.test(trimmed)) {
     return 'markdown';
+  }
+  if (/^#{1,6}\s+/.test(firstLine) || 
+      (/\[.*\]\(.*\)/.test(trimmed) && lines.length > 1) ||
+      (/^[-*+]\s+/.test(firstLine) && lines.some(l => /^[-*+]\s+/.test(l)))) {
+    return 'markdown';
+  }
+  
+  // YAML detection
+  if (/\.(yaml|yml)$/.test(trimmed)) {
+    return 'yaml';
+  }
+  if (/^[\s]*(---|\.\.\.)/.test(firstLine) ||
+      (/^[\s]*[a-zA-Z_-]+:[\s]*/.test(firstLine) && 
+       lines.slice(0, 3).some(l => /^[\s]*[a-zA-Z_-]+:[\s]*/.test(l)) &&
+       !trimmed.includes('{'))) {
+    return 'yaml';
   }
   
   return 'text';

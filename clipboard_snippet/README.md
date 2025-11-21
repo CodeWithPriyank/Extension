@@ -100,7 +100,10 @@ Contributions welcome! Please feel free to submit a Pull Request.
 - [ ] GitHub Gist sync
 - [ ] Export/import snippets
 - [ ] Customizable max snippets count
-- [ ] More code language detection
-- [ ] Dark/light theme toggle
-- [ ] Keyboard navigation in picker
+
+## ✨ Recently Added
+
+- ✅ **More code language detection** - Now supports TypeScript, Java, C/C++, Go, Rust, PHP, Ruby, Swift, Kotlin, YAML, XML, and more
+- ✅ **Dark/light theme toggle** - Beautiful theme switcher with smooth transitions and persistent preferences
+- ✅ **Keyboard navigation** - Navigate snippets with arrow keys, press Enter to copy, Escape to cancel, and `/` to focus search
 

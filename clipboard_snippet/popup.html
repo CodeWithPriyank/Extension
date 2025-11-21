@@ -7,11 +7,18 @@
   <link rel="stylesheet" href="popup.css">
   <link rel="stylesheet" href="lib/prism/prism-tomorrow.min.css">
 </head>
-<body>
+<body data-theme="dark">
   <div class="container">
     <header class="header">
       <h1>📋 Clipboard History</h1>
       <div class="header-actions">
+        <label class="theme-toggle-switch" title="Toggle theme">
+          <input type="checkbox" id="themeToggle" />
+          <span class="toggle-slider">
+            <span class="toggle-icon">🌙</span>
+            <span class="toggle-icon">☀️</span>
+          </span>
+        </label>
         <button id="clearBtn" class="btn-icon" title="Clear all">🗑️</button>
         <button id="settingsBtn" class="btn-icon" title="Settings">⚙️</button>
       </div>
