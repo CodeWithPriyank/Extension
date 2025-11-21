@@ -10,8 +10,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.Prism.plugins.autoloader.languages_path = 'lib/prism/components/';
   }
   
+  await loadTheme();
   await loadHistory();
   setupEventListeners();
+  setupKeyboardNavigation();
   startClipboardMonitoring();
 });
 
@@ -36,13 +38,9 @@ async function loadHistory() {
     const response = await chrome.runtime.sendMessage({ action: 'getHistory' });
     if (response && response.history) {
       snippets = response.history;
-      // Sort snippets: starred first, then by timestamp
-      snippets.sort((a, b) => {
-        if (a.starred && !b.starred) return -1;
-        if (!a.starred && b.starred) return 1;
-        return b.timestamp - a.timestamp;
-      });
-      filteredSnippets = snippets;
+      // Apply filters (which handles sorting based on active filter)
+      const searchQuery = document.getElementById('searchInput')?.value || '';
+      applyFilters(searchQuery);
       renderSnippets();
       renderFilterTags();
     } else {
@@ -69,6 +67,7 @@ function setupEventListeners() {
   document.getElementById('searchInput').addEventListener('input', handleSearch);
   document.getElementById('clearBtn').addEventListener('click', handleClear);
   document.getElementById('settingsBtn').addEventListener('click', handleSettings);
+  document.getElementById('themeToggle').addEventListener('change', toggleTheme);
   
   // Listen for history updates from background
   try {
@@ -76,15 +75,11 @@ function setupEventListeners() {
       try {
         if (request && request.action === 'historyUpdated') {
           snippets = request.history || [];
-          // Sort snippets: starred first, then by timestamp
-          snippets.sort((a, b) => {
-            if (a.starred && !b.starred) return -1;
-            if (!a.starred && b.starred) return 1;
-            return b.timestamp - a.timestamp;
-          });
-          filteredSnippets = snippets;
-          applyFilters();
+          // Apply filters (which handles sorting based on active filter)
+          const searchQuery = document.getElementById('searchInput')?.value || '';
+          applyFilters(searchQuery);
           renderSnippets();
+          updateKeyboardNavigation(); // Update navigation after render
         }
       } catch (error) {
         // Silently ignore errors in message handler
@@ -155,21 +150,35 @@ function applyFilters(searchQuery = '') {
   
   // Apply tag filter
   if (activeFilter) {
-    filtered = filtered.filter(snippet => 
-      snippet.tags.includes(activeFilter) || snippet.codeType === activeFilter
-    );
+    if (activeFilter === 'starred') {
+      // Filter for starred snippets only
+      filtered = filtered.filter(snippet => snippet.starred);
+    } else {
+      filtered = filtered.filter(snippet => 
+        snippet.tags.includes(activeFilter) || snippet.codeType === activeFilter
+      );
+    }
   }
   
-  // Sort: starred snippets first, then by timestamp (newest first)
-  filtered.sort((a, b) => {
-    // If one is starred and the other isn't, starred comes first
-    if (a.starred && !b.starred) return -1;
-    if (!a.starred && b.starred) return 1;
-    // If both are starred or both are not starred, sort by timestamp (newest first)
-    return b.timestamp - a.timestamp;
-  });
+  // Sort based on active filter
+  if (activeFilter === null) {
+    // All filter: sort only by timestamp (newest first)
+    filtered.sort((a, b) => b.timestamp - a.timestamp);
+  } else {
+    // Other filters: starred snippets first, then by timestamp (newest first)
+    filtered.sort((a, b) => {
+      // If one is starred and the other isn't, starred comes first
+      if (a.starred && !b.starred) return -1;
+      if (!a.starred && b.starred) return 1;
+      // If both are starred or both are not starred, sort by timestamp (newest first)
+      return b.timestamp - a.timestamp;
+    });
+  }
   
   filteredSnippets = filtered;
+  // Reset keyboard selection when filters change
+  selectedIndex = -1;
+  keyboardMode = false;
 }
 
 // Render snippets
@@ -187,6 +196,11 @@ function renderSnippets() {
   }
   
   container.innerHTML = filteredSnippets.map(snippet => createSnippetHTML(snippet)).join('');
+  
+  // Update keyboard navigation after render
+  if (keyboardMode) {
+    updateKeyboardNavigation();
+  }
   
   // Attach event listeners to snippet actions
   filteredSnippets.forEach(snippet => {
@@ -244,16 +258,30 @@ function renderSnippets() {
 }
 
 // Map our code types to Prism language names
+// Note: Prism autoloader will attempt to load languages dynamically
+// If a language component isn't available, it will gracefully fallback to no highlighting
 function getPrismLanguage(codeType) {
   const languageMap = {
     'javascript': 'javascript',
+    'typescript': 'typescript',  // Will fallback to javascript if component not available
     'json': 'json',
     'html': 'markup',  // Prism uses 'markup' for HTML
+    'xml': 'markup',   // Prism uses 'markup' for XML
     'css': 'css',
     'python': 'python',
+    'java': 'java',    // Will attempt to load, fallback to plain if not available
+    'cpp': 'cpp',      // Will attempt to load, fallback to plain if not available
+    'c': 'cpp',
+    'go': 'go',        // Will attempt to load, fallback to plain if not available
+    'rust': 'rust',    // Will attempt to load, fallback to plain if not available
+    'php': 'php',      // Will attempt to load, fallback to plain if not available
+    'ruby': 'ruby',    // Will attempt to load, fallback to plain if not available
+    'swift': 'swift',  // Will attempt to load, fallback to plain if not available
+    'kotlin': 'kotlin', // Will attempt to load, fallback to plain if not available
     'sql': 'sql',
     'shell': 'bash',   // Prism uses 'bash' for shell scripts
     'markdown': 'markdown',
+    'yaml': 'yaml',    // Will attempt to load, fallback to plain if not available
     'command': 'bash'  // Commands are similar to bash
   };
   return languageMap[codeType] || '';
@@ -265,13 +293,18 @@ function createSnippetHTML(snippet) {
   const prismLang = getPrismLanguage(snippet.codeType);
   const language = prismLang ? `language-${prismLang}` : '';
   
+  // Filter out codeType from tags to avoid duplicates
+  const filteredTags = snippet.tags.filter(tag => 
+    tag.toLowerCase() !== snippet.codeType.toLowerCase()
+  );
+  
   return `
     <div class="snippet-item ${snippet.starred ? 'starred' : ''}" id="snippet-${snippet.id}">
       <div class="snippet-header">
         <div class="snippet-meta">
           <span class="snippet-type">${snippet.codeType}</span>
           <div class="snippet-tags">
-            ${snippet.tags.slice(0, 3).map(tag => 
+            ${filteredTags.slice(0, 3).map(tag => 
               `<span class="snippet-tag">${tag}</span>`
             ).join('')}
           </div>
@@ -308,6 +341,9 @@ function renderFilterTags() {
   container.innerHTML = `
     <div class="filter-tag ${activeFilter === null ? 'active' : ''}" data-filter="all">
       All
+    </div>
+    <div class="filter-tag ${activeFilter === 'starred' ? 'active' : ''}" data-filter="starred">
+      ⭐ Starred
     </div>
     ${tagsArray.map(tag => `
       <div class="filter-tag ${activeFilter === tag ? 'active' : ''}" data-filter="${tag}">
@@ -406,6 +442,162 @@ async function handleClear() {
 function handleSettings() {
   // TODO: Implement settings UI
   alert('Settings coming soon!');
+}
+
+// Theme management
+let currentTheme = 'dark';
+
+async function loadTheme() {
+  try {
+    const result = await chrome.storage.local.get('theme');
+    if (result.theme) {
+      currentTheme = result.theme;
+    } else {
+      // If no theme stored, default to dark and save it
+      currentTheme = 'dark';
+      await chrome.storage.local.set({ theme: currentTheme });
+    }
+    applyTheme(currentTheme);
+  } catch (error) {
+    // Default to dark theme on error
+    currentTheme = 'dark';
+    applyTheme('dark');
+  }
+}
+
+async function toggleTheme() {
+  try {
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+      // Checkbox checked = light mode, unchecked = dark mode
+      currentTheme = themeToggle.checked ? 'light' : 'dark';
+      await chrome.storage.local.set({ theme: currentTheme });
+      applyTheme(currentTheme);
+    }
+  } catch (error) {
+    console.error('Error toggling theme:', error);
+  }
+}
+
+function applyTheme(theme) {
+  try {
+    document.body.setAttribute('data-theme', theme);
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+      // Checkbox checked = light mode, unchecked = dark mode
+      themeToggle.checked = theme === 'light';
+      const label = themeToggle.closest('.theme-toggle-switch');
+      if (label) {
+        label.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+      }
+    }
+    // Update currentTheme to match
+    currentTheme = theme;
+  } catch (error) {
+    console.error('Error applying theme:', error);
+  }
+}
+
+// Keyboard navigation
+let selectedIndex = -1;
+let keyboardMode = false;
+
+function setupKeyboardNavigation() {
+  document.addEventListener('keydown', (e) => {
+    // Don't interfere with typing in search or note inputs
+    if (e.target.tagName === 'INPUT' && e.target.id !== 'searchInput') {
+      if (e.key === 'Escape') {
+        e.target.blur();
+      }
+      return;
+    }
+    
+    // If typing in search, enable keyboard mode
+    if (e.target.id === 'searchInput') {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        keyboardMode = true;
+        selectedIndex = 0;
+        updateKeyboardNavigation();
+        return;
+      }
+      if (e.key === 'Escape') {
+        e.target.value = '';
+        handleSearch({ target: { value: '' } });
+        return;
+      }
+      return;
+    }
+    
+    // Keyboard navigation keys
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        keyboardMode = true;
+        selectedIndex = Math.min(selectedIndex + 1, filteredSnippets.length - 1);
+        updateKeyboardNavigation();
+        scrollToSelected();
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        keyboardMode = true;
+        selectedIndex = Math.max(selectedIndex - 1, -1);
+        updateKeyboardNavigation();
+        scrollToSelected();
+        break;
+      case 'Enter':
+        if (selectedIndex >= 0 && selectedIndex < filteredSnippets.length) {
+          e.preventDefault();
+          const snippet = filteredSnippets[selectedIndex];
+          copyToClipboard(snippet.text);
+        }
+        break;
+      case 'Escape':
+        keyboardMode = false;
+        selectedIndex = -1;
+        updateKeyboardNavigation();
+        break;
+      case '/':
+        // Focus search on '/' key
+        if (e.target.tagName !== 'INPUT') {
+          e.preventDefault();
+          document.getElementById('searchInput').focus();
+        }
+        break;
+    }
+  });
+  
+  // Disable keyboard mode when clicking
+  document.addEventListener('click', () => {
+    keyboardMode = false;
+    selectedIndex = -1;
+    updateKeyboardNavigation();
+  });
+}
+
+function updateKeyboardNavigation() {
+  const container = document.getElementById('snippetsContainer');
+  if (!container) return;
+  
+  const items = container.querySelectorAll('.snippet-item');
+  items.forEach((item, index) => {
+    if (keyboardMode && index === selectedIndex) {
+      item.classList.add('keyboard-selected');
+      item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    } else {
+      item.classList.remove('keyboard-selected');
+    }
+  });
+}
+
+function scrollToSelected() {
+  const container = document.getElementById('snippetsContainer');
+  if (!container || selectedIndex < 0) return;
+  
+  const items = container.querySelectorAll('.snippet-item');
+  if (items[selectedIndex]) {
+    items[selectedIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
 }
 
 // Get time ago
