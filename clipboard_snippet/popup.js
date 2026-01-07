@@ -3,6 +3,38 @@ let snippets = [];
 let filteredSnippets = [];
 let activeFilter = null;
 
+// Track clipboard permission state for popup (resets when popup closes)
+let clipboardPermissionState = null;
+
+// Helper to check and update clipboard permission
+async function checkClipboardPermission() {
+  // If we already know the state, return it
+  if (clipboardPermissionState !== null) {
+    return clipboardPermissionState === 'granted';
+  }
+  
+  // Try to check permission using Permissions API
+  try {
+    const result = await navigator.permissions.query({ name: 'clipboard-read' });
+    if (result.state === 'granted') {
+      clipboardPermissionState = 'granted';
+      return true;
+    } else if (result.state === 'denied') {
+      clipboardPermissionState = 'denied';
+      return false;
+    }
+  } catch (e) {
+    // Permissions API might not be available, we'll detect on first access
+  }
+  
+  return null; // Unknown state
+}
+
+// Helper to update permission state after clipboard access attempt
+function updatePermissionState(granted) {
+  clipboardPermissionState = granted ? 'granted' : 'denied';
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
   // Configure Prism autoloader to use local files (after scripts load)
@@ -113,16 +145,30 @@ async function startClipboardMonitoring() {
         return;
       }
       
+      // Check permission state first
+      const hasPermission = await checkClipboardPermission();
+      if (hasPermission === false) {
+        // User blocked clipboard access, don't try again
+        return;
+      }
+      
       const text = await navigator.clipboard.readText();
       if (text) {
         try {
           await chrome.runtime.sendMessage({ action: 'addClipboard', text });
           await loadHistory();
+          // Successfully accessed clipboard, mark as granted
+          updatePermissionState(true);
         } catch (e) {
           // Silently ignore message errors
         }
       }
     } catch (error) {
+      // Check if error is due to permission denial
+      if (error.name === 'NotAllowedError' || error.name === 'SecurityError') {
+        // User blocked or permission denied, remember this
+        updatePermissionState(false);
+      }
       // Clipboard access might be restricted - silently ignore
     }
   }, 2000);

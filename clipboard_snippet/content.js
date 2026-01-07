@@ -10,6 +10,60 @@
   window.clipboardSnippetInitialized = true;
   
   let lastClipboardText = '';
+  
+  // Track clipboard permission state per page (resets on page refresh)
+  // 'granted' = user allowed, 'denied' = user blocked, null = not yet asked
+  let clipboardPermissionState = null;
+  
+  // Check clipboard permission state from sessionStorage
+  try {
+    const stored = sessionStorage.getItem('clipboardPermissionState');
+    if (stored === 'granted' || stored === 'denied') {
+      clipboardPermissionState = stored;
+    }
+  } catch (e) {
+    // sessionStorage might not be available, ignore
+  }
+  
+  // Helper to check and update clipboard permission
+  async function checkClipboardPermission() {
+    // If we already know the state, return it
+    if (clipboardPermissionState !== null) {
+      return clipboardPermissionState === 'granted';
+    }
+    
+    // Try to check permission using Permissions API
+    try {
+      const result = await navigator.permissions.query({ name: 'clipboard-read' });
+      if (result.state === 'granted') {
+        clipboardPermissionState = 'granted';
+        try {
+          sessionStorage.setItem('clipboardPermissionState', 'granted');
+        } catch (e) {}
+        return true;
+      } else if (result.state === 'denied') {
+        clipboardPermissionState = 'denied';
+        try {
+          sessionStorage.setItem('clipboardPermissionState', 'denied');
+        } catch (e) {}
+        return false;
+      }
+    } catch (e) {
+      // Permissions API might not be available, we'll detect on first access
+    }
+    
+    return null; // Unknown state
+  }
+  
+  // Helper to update permission state after clipboard access attempt
+  function updatePermissionState(granted) {
+    clipboardPermissionState = granted ? 'granted' : 'denied';
+    try {
+      sessionStorage.setItem('clipboardPermissionState', clipboardPermissionState);
+    } catch (e) {
+      // sessionStorage might not be available, ignore
+    }
+  }
 
   // Helper function to check if extension context is valid
   // Uses safe property access to prevent any errors
@@ -118,14 +172,28 @@
         return; // Extension context invalidated
       }
       
+      // Check permission state first
+      const hasPermission = await checkClipboardPermission();
+      if (hasPermission === false) {
+        // User blocked clipboard access, don't try again
+        return;
+      }
+      
       // Try to read clipboard
       const text = await navigator.clipboard.readText();
       if (text && text !== lastClipboardText) {
         lastClipboardText = text;
         await sendClipboardToBackground(text);
+        // Successfully accessed clipboard, mark as granted
+        updatePermissionState(true);
       }
     } catch (error) {
-      // Silently ignore all errors (clipboard access restricted or context invalidated)
+      // Check if error is due to permission denial
+      if (error.name === 'NotAllowedError' || error.name === 'SecurityError') {
+        // User blocked or permission denied, remember this
+        updatePermissionState(false);
+      }
+      // Silently ignore all other errors (clipboard access restricted or context invalidated)
     }
   }, 3000);
 
